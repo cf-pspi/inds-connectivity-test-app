@@ -1,0 +1,26 @@
+mule:
+  env: sit
+
+tls:
+  keystore:
+      jksPath: 'mykeystore.jks'
+      jksAlias: 'servercert'
+      jksKey: '![jZ9aFIvsIbzo/rVxKqDOdQ==]'
+      jksPassword: '![jZ9aFIvsIbzo/rVxKqDOdQ==]'
+      
+api:
+  id=18588006
+sap:
+  host: "vhpmkthdci.hec.privatecloudedition.com"
+  port: "44300"
+  path: "/sap/opu/odata/sap/YMMM_SAPEWORK_API_SRV/"
+  auth: ""
+  client: "120"
+  
+http:
+  host: '0.0.0.0'
+  port: '8081'
+  timeout: '30000'
+  
+secret:
+   key: 'PanasonicDev2022'

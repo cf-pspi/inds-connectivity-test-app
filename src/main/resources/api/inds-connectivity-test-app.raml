@@ -1,0 +1,26 @@
+#%RAML 1.0
+title: INDS Connectivity Test App
+version: v1
+description: Connectivity Test App
+
+
+/mule-endpoint:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+              
+      404:
+        body:
+          application/json:
+            example:
+              {"message":"Resource Not Found"}
+           
+/sendToSAP:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+           

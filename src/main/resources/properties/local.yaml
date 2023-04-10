@@ -1,0 +1,19 @@
+api:
+  id:18588006
+  
+http:
+  host: '0.0.0.0'
+  port: '8081'
+  timeout: '30000'
+  
+
+sap:
+  host: "vhpmkthdci.hec.privatecloudedition.com"
+  port: "44300"
+
+tls:
+  keystore:
+      jksPath: 'mykeystore.jks'
+      jksAlias: 'servercert'
+      jksKey: '![jZ9aFIvsIbzo/rVxKqDOdQ==]'
+      jksPassword: '![jZ9aFIvsIbzo/rVxKqDOdQ==]'

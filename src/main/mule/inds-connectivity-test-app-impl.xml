@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:sap="http://www.mulesoft.org/schema/mule/sap"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sap http://www.mulesoft.org/schema/mule/sap/current/mule-sap.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+	<sub-flow name="send-ff-restapi-sap" doc:id="5c93efbd-1f8c-4d4e-8994-833048c42f79" >
+		<logger level="INFO" doc:name="Start" doc:id="b7ef9f4a-7a47-44c9-a461-681b193a5d1d" message='"**********Start FF Rest Api File Transfer*********************"'/>
+		<try doc:name="Try" doc:id="0f10c1b1-edbd-41dd-881c-d94a0a76a8a1" >
+			<http:request method="GET" doc:name="Fetch CSRF Token" doc:id="20a3cf3f-3cc5-495b-b380-16cc3ef0ce63" config-ref="SAP-HTTPS-Token-Configuration" path="/sap/opu/odata/sap/ymmm_sapework_api_srv/">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"x-csrf-token" : "FETCH"
+}]]]></http:headers>
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"sap-client" : "120"
+}]]]></http:query-params>
+		</http:request>
+			<logger level="INFO" doc:name="Logger" doc:id="f7acb57f-16ee-4b4f-a6be-2b162d4b22e7" message="#[payload]"/>
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="35024b1a-adf6-4ecf-8f96-c166403e85d8" >
+					<logger level="INFO" doc:name="Error- log" doc:id="8ecf972e-793e-4d4b-a037-cd7b65a6a9d3" message='"Unable to hit the SAP CSRF Token URL "'/>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="vCSRF-Token" doc:id="9f400d91-3de6-4b69-98b3-12087e20a5f2" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="vCSRF" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.headers.'x-csrf-token' default ""]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="0714d3ed-6101-445f-8b2f-ccdc44079c87" message="#[vars.vCSRF]"/>
+		<choice doc:name="If CSRF Token is not Empty" doc:id="22ef1b8f-3585-4551-93c4-4f97eb864b71" >
+			<when expression='#[vars.vCSRF != ""]'>
+				<ee:transform doc:name="Set Payload" doc:id="18aea598-56d2-49cb-84a0-72822bb88e9f">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+    "Extid": "a",
+    "Bukrs": "7030",
+    "Eponum": "ePO-12345",
+    "Ebeln": "4520001907",
+    "Menge": "500",
+    "Netwr": "50.00",
+    "Stats": "F"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<try doc:name="Try" doc:id="25bed9af-0f20-4e22-a410-5d2c5993766d" >
+					<logger level="INFO" doc:name="Logger" doc:id="8bbd7f01-6bce-4ce9-9f4b-c4160d2e3ff6" message="#[payload]"/>
+					<logger level="INFO" doc:name="Logger" doc:id="b42e8bb4-af68-4266-af30-acd75a3e75cd" message="#[payload]"/>
+					<http:request method="POST" doc:name="Request to SAP ePO" doc:id="ff8a6f81-39e4-4c7d-ad91-aadcff6e7c2a" config-ref="SAP-HTTPS-Token-Configuration" path="/sap/opu/odata/sap/ymmm_sapework_api_srv/inEPOSet/">
+					<http:headers><![CDATA[#[output application/java
+---
+{
+	"x-csrf-token" : vars.vCSRF,
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	"sap-client" : "120"
+}]]]></http:query-params>
+				</http:request>
+					<error-handler >
+						<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="94fe08e8-ef73-498d-aef9-e5b86f4a264d" >
+							<logger level="INFO" doc:name="Error- log" doc:id="3d7bcae3-1e21-4b4f-b18e-2b57126300d8" message='"Unable to hit SAP URL with crsf token" ++ vars.vCSRF'/>
+						</on-error-propagate>
+					</error-handler>
+				</try>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Error-Log" doc:id="53f43599-a6e8-49b3-a7a6-7cb07aeabe5a" message='"Error While Fetching the Token"'/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="a2c6ccdc-aa8d-4e7c-a142-ce52d334e826" message='"****File Transfer to SAP via Rest API Call*********"'/>
+	</sub-flow>
+</mule>
